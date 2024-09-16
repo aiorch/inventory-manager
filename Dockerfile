@@ -6,9 +6,9 @@ COPY main.go .
 ENV CGO_ENABLED=0
 RUN go get -d -v ./...
 
-RUN go build -a -installsuffix cgo -o cloud-api .
+RUN go build -a -installsuffix cgo -o inventory-manager .
 
 FROM scratch AS runtime
-COPY --from=build /go/src/cloud-api ./
+COPY --from=build /go/src/inventory-manager ./
 EXPOSE 8080/tcp
-ENTRYPOINT ["./swagger"]
+ENTRYPOINT ["./inventory-manager"]

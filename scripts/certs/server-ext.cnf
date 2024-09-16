@@ -1,0 +1,4 @@
+subjectAltName=DNS:localhost,IP:0.0.0.0,IP:127.0.0.1
+crlDistributionPoints = URI:http://localhost:4444/crl.crl
+keyUsage = cRLSign, digitalSignature, keyCertSign
+basicConstraints=critical,CA:true,pathlen:0

@@ -29,20 +29,20 @@ import (
 	"net"
 	"strings"
 
-	"github.com/redis/go-redis"
-	"google.golang.org/genproto/googleapis/cloud/redis/v1"
+	redis "github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/redis/go-redis/v9"
-	"github.com/woojiahao/go_redis/internal/utility"
+	data "github.com/aiorch/inventory-manager/pkg/config"
 
-	data "aiorch/inventory-manager/pkg/config"
+	pb "github.com/aiorch/inventory-manager/pkg/inventoryservice"
 
-	pb "aiorch/inventory-manager/pkg/inventoryservice"
+	utility "github.com/aiorch/inventory-manager/pkg/utility"
+
+	handler "github.com/aiorch/inventory-manager/pkg/handler"
 )
 
 var (
@@ -50,7 +50,7 @@ var (
 	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
 )
 
-var port = flag.Int("port", 50051, "the port to serve on")
+var port = flag.Int("port", 50061, "the port to serve on")
 
 func main() {
 	flag.Parse()
@@ -58,16 +58,16 @@ func main() {
 
 	ctx := context.Background()
 
-	cert, err := tls.LoadX509KeyPair(data.Path("x509/server_cert.pem"), data.Path("x509/server_key.pem"))
+	cert, err := tls.LoadX509KeyPair(data.Path("x509/server-cert.pem"), data.Path("x509/server-key.pem"))
 	if err != nil {
 		log.Fatalf("failed to load key pair: %s", err)
 	}
 
 	// Ensure that we have Redis running and accessible in our systems
 	rdb := redis.NewClient(&redis.Options{
-		Addr: utility.Address(),
-		Password: utility.Passowrd(),
-		DB: utility.Database(),
+		Addr:     utility.Address(),
+		Password: utility.Password(),
+		DB:       utility.Database(),
 	})
 	defer rdb.Close()
 
@@ -91,7 +91,7 @@ func main() {
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 	}
 	s := grpc.NewServer(opts...)
-	pb.RegisterInventoryManagerServer(s, &handler.invHandler{cw})
+	pb.RegisterInventoryManagerServer(s, handler.InvHandler{Cw: cw})
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
